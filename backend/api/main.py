@@ -5,6 +5,8 @@ from orchestrator.engine import orchestrate
 from fastapi import FastAPI
 from pydantic import BaseModel
 from models.llm import query_llm
+from security.filter import is_safe
+from security.risk import risk_score
 
 app = FastAPI()
 
@@ -17,4 +19,16 @@ def root():
 
 @app.post("/chat")
 def chat(req: ChatRequest):
-    return orchestrate(req.message)
+    if not is_safe(req.message):
+        return {
+            "reply": "Request blocked due to security policy.",
+            "confidence": 1.0,
+            "actions": ["blocked"]
+        }
+
+    risk = risk_score(req.message)
+
+    response = orchestrate(req.message)
+    response["risk"] = risk
+
+    return response
