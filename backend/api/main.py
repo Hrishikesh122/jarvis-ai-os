@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
+from orchestrator.engine import orchestrate
 from fastapi import FastAPI
 from pydantic import BaseModel
 from models.llm import query_llm
@@ -17,9 +17,4 @@ def root():
 
 @app.post("/chat")
 def chat(req: ChatRequest):
-    reply = query_llm(req.message)
-    return {
-        "reply": reply,
-        "confidence": 0.9,
-        "actions": []
-    }
+    return orchestrate(req.message)
